@@ -5,15 +5,13 @@ import dotenv from "dotenv";
 import studentRoutes from "./src/routes/studentRoutes.js";
 import teacherRoutes from "./src/routes/teacherRoutes.js";
 import adminRoutes from "./src/routes/adminRoutes.js";
-import assignmentRoutes from "./src/routes/assignmentRoutes.js";
+import assignmentRoutes from "./src/routes/router.js";
 import router from "./src/routes/studentRoutes.js";
 dotenv.config();
 const app = express();
 
 app.use(express.json());
-app.use("/api/auth", router);
-app.use("/api/assignments", assignmentRoutes);
-
+app.use("/api", router);
 (async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI); //(`${process.env.MONGODB_URI}/${DB_NAME}`);
