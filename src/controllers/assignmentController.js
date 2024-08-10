@@ -1,4 +1,4 @@
-import Assignment from "../models/Assignment.js";
+import Assignment from "../models/assignmentschema.js";
 import User from "../models/usersSchema.js";
 
 export const createOrUpdateAssignment = async (req, res) => {
@@ -51,7 +51,6 @@ export const createOrUpdateAssignment = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-import Assignment from "../models/Assignment.js";
 
 export const deleteAssignment = async (req, res) => {
   try {
@@ -75,7 +74,6 @@ export const deleteAssignment = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-import Assignment from "../models/Assignment.js";
 
 export const submitOrUpdateAssignment = async (req, res) => {
   try {
