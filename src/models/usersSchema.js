@@ -24,8 +24,13 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" }, // For students
-  students: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // For teachers
+  course: {
+    type: String,
+  },
+  timing: {
+    type: String,
+  },
+  assignedStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // for teachers to track their students
 });
-
-export default mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;

@@ -1,6 +1,7 @@
 // controllers/authController.js
 import otpModel from "../models/otpSchema.js";
-import userModel from "../models/userSchema.js";
+import bcrypt from "bcrypt";
+import userModel from "../models/usersSchema.js";
 import jwt from "jsonwebtoken";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
@@ -58,11 +59,52 @@ export const otpProcessApi = async (req, res) => {
   res.json("resend successful");
 };
 
+// export const signupController = async (req, res) => {
+//   try {
+//     const { name, email, password } = req.body;
+
+//     if (!name || !email || !password) {
+//       return res.status(400).json({
+//         data: null,
+//         status: false,
+//         message: "Required fields are missing",
+//       });
+//     }
+
+//     const userExist = await userModel.findOne({ email: email });
+
+//     if (userExist) {
+//       return res.status(400).json({
+//         data: null,
+//         message: "Email already exists",
+//         status: false,
+//       });
+//     }
+
+//     const userCreated = await userModel.create({
+//       name,
+//       email,
+//       password,
+//       role: "student",
+//     });
+
+//     await otpProcess(userCreated._id, email);
+
+//     res.json({
+//       data: null,
+//       message: "User created. OTP sent to email.",
+//       status: true,
+//     });
+//   } catch (err) {
+//     res.status(500).json("Something went wrong");
+//   }
+// };
+
 export const signupController = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, course, timing } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !course || !timing) {
       return res.status(400).json({
         data: null,
         status: false,
@@ -80,11 +122,17 @@ export const signupController = async (req, res) => {
       });
     }
 
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const userCreated = await userModel.create({
       name,
       email,
-      password,
+      password: hashedPassword, // Save the hashed password
       role: "student",
+      verified: false, // Initially set as unverified
+      course,
+      timing,
     });
 
     await otpProcess(userCreated._id, email);
@@ -99,6 +147,38 @@ export const signupController = async (req, res) => {
   }
 };
 
+// export const otpVerify = async (req, res) => {
+//   const { id, otp } = req.body;
+//   if (!id || !otp) {
+//     return res.status(400).json("Required fields are missing");
+//   }
+
+//   const getOtp = await otpModel.findOne({ userId: id });
+//   if (!getOtp) {
+//     return res.status(400).json({
+//       data: null,
+//       message: "OTP not found",
+//       status: false,
+//     });
+//   }
+
+//   if (getOtp.otp !== otp) {
+//     return res.json({
+//       data: null,
+//       message: "Wrong OTP code entered",
+//       status: false,
+//     });
+//   }
+
+//   getOtp.verified = true;
+//   await getOtp.save();
+
+//   res.json({
+//     data: getOtp,
+//     message: "OTP verified successfully",
+//     status: true,
+//   });
+// };
 export const otpVerify = async (req, res) => {
   const { id, otp } = req.body;
   if (!id || !otp) {
@@ -122,15 +202,99 @@ export const otpVerify = async (req, res) => {
     });
   }
 
-  getOtp.verified = true;
-  await getOtp.save();
+  // Update user's verified status
+  const user = await userModel.findOneAndUpdate(
+    { email: id },
+    { verified: true },
+    { new: true } // Return the updated document
+  );
+
+  // Optionally delete the OTP record since it's no longer needed
+  await otpModel.findOneAndDelete({ userId: id });
 
   res.json({
-    data: getOtp,
-    message: "OTP verified successfully",
+    data: user,
+    message: "OTP verified successfully and user verified",
     status: true,
   });
 };
+
+// export const loginController = async (req, res) => {
+//   const { email, password } = req.body;
+
+//   if (!email || !password) {
+//     return res.json({
+//       data: null,
+//       status: false,
+//       message: "Required fields are missing",
+//     });
+//   }
+
+//   const userExist = await userModel.findOne({ email: email });
+
+//   if (!userExist) {
+//     return res.status(400).json({
+//       data: null,
+//       status: false,
+//       message: "Email does not exist",
+//     });
+//   }
+
+//   if (userExist.password !== password) {
+//     return res.status(400).json({
+//       data: null,
+//       status: false,
+//       message: "Password incorrect",
+//     });
+//   }
+
+//   const token = generateToken(userExist._id, userExist.role);
+
+//   res.json({
+//     data: userExist,
+//     token,
+//     status: true,
+//   });
+// };
+// export const loginController = async (req, res) => {
+//   const { email, password } = req.body;
+
+//   if (!email || !password) {
+//     return res.json({
+//       data: null,
+//       status: false,
+//       message: "Required fields are missing",
+//     });
+//   }
+
+//   const userExist = await userModel.findOne({ email: email });
+
+//   if (!userExist) {
+//     return res.status(400).json({
+//       data: null,
+//       status: false,
+//       message: "Email does not exist",
+//     });
+//   }
+
+//   // Compare the hashed password
+//   const isPasswordValid = await bcrypt.compare(password, userExist.password);
+//   if (!isPasswordValid) {
+//     return res.status(400).json({
+//       data: null,
+//       status: false,
+//       message: "Password incorrect",
+//     });
+//   }
+
+//   const token = generateToken(userExist._id, userExist.role);
+
+//   res.json({
+//     data: userExist,
+//     token,
+//     status: true,
+//   });
+// };
 
 export const loginController = async (req, res) => {
   const { email, password } = req.body;
@@ -153,7 +317,18 @@ export const loginController = async (req, res) => {
     });
   }
 
-  if (userExist.password !== password) {
+  // Check if the user is a student and if they are verified
+  if (userExist.role === "student" && !userExist.verified) {
+    return res.status(400).json({
+      data: null,
+      status: false,
+      message: "Please verify your email before logging in.",
+    });
+  }
+
+  // Compare the hashed password
+  const isPasswordValid = await bcrypt.compare(password, userExist.password);
+  if (!isPasswordValid) {
     return res.status(400).json({
       data: null,
       status: false,

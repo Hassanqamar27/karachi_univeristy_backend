@@ -1,76 +1,60 @@
-// controllers/adminController.js
-import userModel from "../models/userSchema.js";
-import courseModel from "../models/courseSchema.js"; // Assuming you have a course schema
+import User from "../models/usersSchema.js";
 import bcrypt from "bcryptjs";
 
-export const assignTeacherToStudent = async (req, res) => {
+// Admin creates a teacher and assigns students
+export const createTeacherAndAssignStudents = async (req, res) => {
   try {
-    const { studentId, teacherId, courseId } = req.body;
+    const { name, email, password, course, timing } = req.body;
 
-    const student = await userModel.findById(studentId);
-    const teacher = await userModel.findById(teacherId);
-    const course = await courseModel.findById(courseId);
-
-    if (!student || !teacher || !course) {
-      return res
-        .status(404)
-        .json({ message: "Student, Teacher, or Course not found" });
+    // Validate input
+    if (!name || !email || !password || !course || !timing) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
-    if (student.role !== "student" || teacher.role !== "teacher") {
-      return res
-        .status(400)
-        .json({ message: "Invalid roles for student or teacher" });
+    // Check if the teacher already exists
+    const teacherExist = await User.findOne({ email });
+    if (teacherExist) {
+      return res.status(400).json({ message: "Email already exists" });
     }
 
-    student.course = courseId;
-    teacher.students.push(studentId);
-
-    await student.save();
-    await teacher.save();
-
-    res.json({ message: "Teacher assigned to student successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Something went wrong", error });
-  }
-};
-
-export const registerTeacher = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        data: null,
-        status: false,
-        message: "Required fields are missing",
-      });
-    }
-
-    const userExist = await userModel.findOne({ email: email });
-
-    if (userExist) {
-      return res.status(400).json({
-        data: null,
-        message: "Email already exists",
-        status: false,
-      });
-    }
-
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const teacherCreated = await userModel.create({
+
+    // Create the teacher
+    const newTeacher = new User({
       name,
       email,
       password: hashedPassword,
       role: "teacher",
+      course,
+      timing,
     });
 
-    res.json({
-      data: teacherCreated,
-      message: "Teacher registered successfully",
-      status: true,
+    // Save the teacher
+    await newTeacher.save();
+
+    // Find students matching the course and timing
+    const students = await User.find({
+      role: "student",
+      course,
+      timing,
     });
-  } catch (err) {
-    res.status(500).json("Something went wrong");
+
+    // Assign the students to the teacher
+    newTeacher.assignedStudents = students.map((student) => student._id);
+
+    // Save the updated teacher with assigned students
+    await newTeacher.save();
+
+    res
+      .status(201)
+      .json({
+        message: "Teacher created and students assigned successfully",
+        teacher: newTeacher,
+      });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong", error: error.message });
   }
 };

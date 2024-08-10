@@ -1,7 +1,7 @@
 // scripts/addAdmin.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import Admin from "../models/adminSchema.js";
+import usersSchema from "../models/usersSchema.js";
 import "dotenv/config";
 
 const run = async () => {
@@ -11,7 +11,7 @@ const run = async () => {
       useUnifiedTopology: true,
     });
 
-    const existingAdmin = await Admin.findOne({
+    const existingAdmin = await usersSchema.findOne({
       email: process.env.ADMIN_EMAIL,
     });
 
@@ -22,10 +22,11 @@ const run = async () => {
 
     const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
 
-    const newAdmin = new Admin({
+    const newAdmin = new usersSchema({
       name: process.env.ADMIN_NAME,
       email: process.env.ADMIN_EMAIL,
       password: hashedPassword,
+      role: "admin",
     });
 
     await newAdmin.save();

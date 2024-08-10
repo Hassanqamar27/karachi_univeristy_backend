@@ -1,4 +1,3 @@
-// models/Assignment.js
 import mongoose from "mongoose";
 
 const assignmentSchema = new mongoose.Schema(
@@ -7,29 +6,29 @@ const assignmentSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    description: {
+      type: String,
+    },
     dueDate: {
       type: Date,
       required: true,
     },
-    course: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Course",
-      required: true,
-    },
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Teacher",
+      ref: "User", // Referring to User schema
       required: true,
     },
     submissions: [
       {
         student: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Student",
+          ref: "User", // Referring to User schema
           required: true,
         },
         fileUrl: { type: String, required: true },
         grade: { type: Number, min: 0, max: 10 },
+        submittedAt: { type: Date, default: Date.now },
+        isLate: { type: Boolean, default: false },
       },
     ],
   },

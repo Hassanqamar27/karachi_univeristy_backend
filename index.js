@@ -12,9 +12,6 @@ const app = express();
 
 app.use(express.json());
 app.use("/api/auth", router);
-app.use("/api/students", studentRoutes);
-app.use("/api/teachers", teacherRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/api/assignments", assignmentRoutes);
 
 (async () => {
