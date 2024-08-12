@@ -204,8 +204,8 @@ export const otpVerify = async (req, res) => {
 
   // Update user's verified status
   const user = await userModel.findOneAndUpdate(
-    { email: id },
-    { verified: true },
+    { _id: id },
+    { $set: { verified: true } },
     { new: true } // Return the updated document
   );
 
