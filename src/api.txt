@@ -1,0 +1,121 @@
+post http://localhost:5000/api/signup
+
+{
+        "name": "Hassan Qamar",
+        "email": "tes23t@gmail.com",
+        "password": "abc",
+        "role": "student",
+        "course": "math",
+        "timing": "9 to 10"
+    }
+response
+{
+    "data": {
+        "id": "66d7c02d188f089388372273",
+        "name": "Hassan Qamar",
+        "email": "tes23t@gmail.com",
+        "role": "student",
+        "verified": false,
+        "course": "math",
+        "timing": "9 to 10"
+    },
+    "message": "User created. OTP sent to email.",
+    "status": true
+}
+
+
+post http://localhost:5000/api/verify-otp
+{
+    "id": "tes2t@gmail.com",
+    "otp":"857113"
+}
+response
+{
+    "data": {
+        "_id": "66d79c83cf83f596a8bdd1bd",
+        "name": "Hassan Qamar",
+        "email": "tes2t@gmail.com",
+        "password": "$2b$10$G/vTaxbIsXGcuVAVl06IuOLzG7SqUgUjhk0K5ORKB0lbCcYsBcyL.",
+        "role": "student",
+        "verified": true,
+        "course": "math",
+        "timing": "9 to 10",
+        "assignedStudents": [],
+        "__v": 0
+    },
+    "message": "OTP verified successfully and user verified",
+    "status": true
+}
+
+http://localhost:5000/api/login
+{
+    "email":"hassanqamer2002@gmail.com",
+    "password":""
+}
+{
+    "data": {
+        "_id": "66d8fb05dc363ca12093c066",
+        "name": "HassanQamar",
+        "email": "hassanqamer2002@gmail.com",
+        "password": "$2a$10$t8ySglNlbwf0ojG.wj3r8.h6rR9rQiKdCpiFDKQokPZs6iU7rBboW",
+        "role": "admin",
+        "verified": false,
+        "assignedStudents": [],
+        "__v": 0
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZDhmYjA1ZGMzNjNjYTEyMDkzYzA2NiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTcyNTUyNTUwOSwiZXhwIjoxNzI1NTQzNTA5fQ.EoxfnG-eSps5sU_YTfn76uAEKg8M_yTNSLxQgNAno2Q",
+    "status": true
+}
+http://localhost:5000/api/register-teacher
+{
+  "name": "John Doe",
+  "email": "john1doe@example.com",
+  "password":"hassan",
+  "course": "Mathematics",
+  "timing": "9 AM - 5 PM"
+}
+{
+    "message": "Teacher created and students assigned successfully",
+    "teacher": {
+        "name": "John Doe",
+        "email": "john1doe@example.com",
+        "password": "$2a$10$k4WuhZXUajV89cqvJjSjqugc0M6lEOgyJkfPLpKbqJT3A9fA4poFm",
+        "role": "teacher",
+        "verified": false,
+        "course": "Mathematics",
+        "timing": "9 AM - 5 PM",
+        "assignedStudents": [],
+        "_id": "66d93c9b9d591108e42778e4",
+        "__v": 0
+    }
+}
+http://localhost:5000/api/assignments/66e0bfd62497c9d761155cca/grade
+just make sure the token in bearer token
+{
+    "studentId":"66dc9f67699e1bdb794f26db",
+    "grade": "A"
+}
+
+{
+    "message": "Grade assigned successfully.",
+    "submission": {
+        "_id": "66e0bfd62497c9d761155cca",
+        "title": "hassan",
+        "description": "afasdffas",
+        "dueDate": "2024-09-24T00:00:00.000Z",
+        "teacher": "66dca0d2699e1bdb794f26f1",
+        "submissions": [
+            {
+                "student": "66dc9f67699e1bdb794f26db",
+                "fileUrl": "https://res.cloudinary.com/dvfqp0z6x/image/upload/v1726005374/assignments/1726005368144-ID-260429.pdf",
+                "submittedAt": "2024-09-10T21:56:13.377Z",
+                "isLate": false,
+                "_id": "66e0c0262497c9d761155cd7",
+                "grade": "A"
+            }
+        ],
+        "createdAt": "2024-09-10T21:53:26.296Z",
+        "updatedAt": "2024-09-11T19:53:41.342Z",
+        "__v": 1
+    }
+}

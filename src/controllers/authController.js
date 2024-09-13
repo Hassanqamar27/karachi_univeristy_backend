@@ -59,47 +59,6 @@ export const otpProcessApi = async (req, res) => {
   res.json("resend successful");
 };
 
-// export const signupController = async (req, res) => {
-//   try {
-//     const { name, email, password } = req.body;
-
-//     if (!name || !email || !password) {
-//       return res.status(400).json({
-//         data: null,
-//         status: false,
-//         message: "Required fields are missing",
-//       });
-//     }
-
-//     const userExist = await userModel.findOne({ email: email });
-
-//     if (userExist) {
-//       return res.status(400).json({
-//         data: null,
-//         message: "Email already exists",
-//         status: false,
-//       });
-//     }
-
-//     const userCreated = await userModel.create({
-//       name,
-//       email,
-//       password,
-//       role: "student",
-//     });
-
-//     await otpProcess(userCreated._id, email);
-
-//     res.json({
-//       data: null,
-//       message: "User created. OTP sent to email.",
-//       status: true,
-//     });
-//   } catch (err) {
-//     res.status(500).json("Something went wrong");
-//   }
-// };
-
 export const signupController = async (req, res) => {
   try {
     const { name, email, password, course, timing } = req.body;
@@ -134,11 +93,39 @@ export const signupController = async (req, res) => {
       course,
       timing,
     });
+    const teacher = await userModel.findOne({
+      role: "teacher",
+      course,
+      timing,
+    });
+
+    if (teacher) {
+      console.log("Matching teacher found: ", teacher._id);
+
+      // Update the student's schema with the teacher's ID
+      userCreated.assignedStudents.push(teacher._id);
+      await userCreated.save();
+
+      // Update the teacher's assignedStudents array
+      await userModel.findOneAndUpdate(
+        { _id: teacher._id },
+        { $push: { assignedStudents: userCreated._id } },
+        { new: true }
+      );
+    }
 
     await otpProcess(userCreated._id, email);
 
     res.json({
-      data: null,
+      data: {
+        id: userCreated._id,
+        name: userCreated.name,
+        email: userCreated.email,
+        role: userCreated.role,
+        verified: userCreated.verified,
+        course: userCreated.course,
+        timing: userCreated.timing,
+      },
       message: "User created. OTP sent to email.",
       status: true,
     });
@@ -147,38 +134,6 @@ export const signupController = async (req, res) => {
   }
 };
 
-// export const otpVerify = async (req, res) => {
-//   const { id, otp } = req.body;
-//   if (!id || !otp) {
-//     return res.status(400).json("Required fields are missing");
-//   }
-
-//   const getOtp = await otpModel.findOne({ userId: id });
-//   if (!getOtp) {
-//     return res.status(400).json({
-//       data: null,
-//       message: "OTP not found",
-//       status: false,
-//     });
-//   }
-
-//   if (getOtp.otp !== otp) {
-//     return res.json({
-//       data: null,
-//       message: "Wrong OTP code entered",
-//       status: false,
-//     });
-//   }
-
-//   getOtp.verified = true;
-//   await getOtp.save();
-
-//   res.json({
-//     data: getOtp,
-//     message: "OTP verified successfully",
-//     status: true,
-//   });
-// };
 export const otpVerify = async (req, res) => {
   const { id, otp } = req.body;
   if (!id || !otp) {
@@ -204,7 +159,7 @@ export const otpVerify = async (req, res) => {
 
   // Update user's verified status
   const user = await userModel.findOneAndUpdate(
-    { _id: id },
+    { email: id },
     { $set: { verified: true } },
     { new: true } // Return the updated document
   );
@@ -218,83 +173,6 @@ export const otpVerify = async (req, res) => {
     status: true,
   });
 };
-
-// export const loginController = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   if (!email || !password) {
-//     return res.json({
-//       data: null,
-//       status: false,
-//       message: "Required fields are missing",
-//     });
-//   }
-
-//   const userExist = await userModel.findOne({ email: email });
-
-//   if (!userExist) {
-//     return res.status(400).json({
-//       data: null,
-//       status: false,
-//       message: "Email does not exist",
-//     });
-//   }
-
-//   if (userExist.password !== password) {
-//     return res.status(400).json({
-//       data: null,
-//       status: false,
-//       message: "Password incorrect",
-//     });
-//   }
-
-//   const token = generateToken(userExist._id, userExist.role);
-
-//   res.json({
-//     data: userExist,
-//     token,
-//     status: true,
-//   });
-// };
-// export const loginController = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   if (!email || !password) {
-//     return res.json({
-//       data: null,
-//       status: false,
-//       message: "Required fields are missing",
-//     });
-//   }
-
-//   const userExist = await userModel.findOne({ email: email });
-
-//   if (!userExist) {
-//     return res.status(400).json({
-//       data: null,
-//       status: false,
-//       message: "Email does not exist",
-//     });
-//   }
-
-//   // Compare the hashed password
-//   const isPasswordValid = await bcrypt.compare(password, userExist.password);
-//   if (!isPasswordValid) {
-//     return res.status(400).json({
-//       data: null,
-//       status: false,
-//       message: "Password incorrect",
-//     });
-//   }
-
-//   const token = generateToken(userExist._id, userExist.role);
-
-//   res.json({
-//     data: userExist,
-//     token,
-//     status: true,
-//   });
-// };
 
 export const loginController = async (req, res) => {
   const { email, password } = req.body;
@@ -332,7 +210,7 @@ export const loginController = async (req, res) => {
     return res.status(400).json({
       data: null,
       status: false,
-      message: "Password incorrect",
+      message: "Email or Password incorrect",
     });
   }
 

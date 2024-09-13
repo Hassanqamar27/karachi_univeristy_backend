@@ -1,4 +1,6 @@
 // scripts/addAdmin.js
+// to run this file node src/scripts/addAdmin.js
+
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import usersSchema from "../models/usersSchema.js";
